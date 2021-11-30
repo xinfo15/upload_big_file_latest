@@ -6,6 +6,11 @@
     </div>
     <h2>生成hash</h2>
     <el-progress class="hash" :percentage="hashPercent"></el-progress>
+    <h2>切片上传</h2>
+    <div class="chunk" v-for="(item, idx) in processList" :key="idx">
+      <div class="chunk-name">{{item.name}} </div>
+      <el-progress class="hash"></el-progress>
+    </div>
   </div>
 </template>
 
@@ -22,11 +27,12 @@ export default {
       file: null,
       worker: null,
       hashPercent: 0,
-      hash: ''
+      hash: '',
+      processList: [],
     }
   },
   methods: {
-    request(method, url, data) {
+    request(method, url, data, process) {
       return new Promise((resolve, reject) => {
         const xhr = new XMLHttpRequest()
         xhr.open(method, url, true)
@@ -38,6 +44,9 @@ export default {
             }
           }
         }
+        xhr.addEventListener('progress', (e) => {
+          console.log(e);
+        })
         xhr.send(data)
       })
     },
@@ -47,6 +56,8 @@ export default {
 
       this.file = file
       this.chunkList = []
+      this.hashPercent = 0
+      this.hash = ''
       this.splitChunks(file)
     },
     splitChunks(file) {
@@ -60,6 +71,7 @@ export default {
       }
     },
     calcContentHash() {
+      if (this.hash) return
       return new Promise((resolve, reject) => {
         this.worker = new hashWoker()
         const worker = this.worker
@@ -67,8 +79,8 @@ export default {
         // console.log(worker);
         const chunkList = this.chunkList
         worker.postMessage(chunkList)
-        worker.onmessage =  (e) => {
-          const {percent, hash} = e.data
+        worker.onmessage = (e) => {
+          const { percent, hash } = e.data
           this.hashPercent = percent
           this.hash = hash
 
@@ -84,7 +96,7 @@ export default {
       const formData = new FormData()
       formData.append('hash', this.hash)
       formData.append('filename', this.file.name)
-      formData.append('size', this.chunkLimitSize)
+      formData.append('limitSize', this.chunkLimitSize)
       return this.request('post', 'http://localhost:8888/merge_chunks', formData)
     },
     async getChunkList() {
@@ -100,7 +112,7 @@ export default {
       await this.calcContentHash()
 
       await this.getChunkList()
-      console.log(chunkList);
+      console.log(chunkList)
       const chunkList = this.chunkList
 
       const requestList = chunkList.map((val, idx) => {
@@ -111,13 +123,11 @@ export default {
         return this.request('post', 'http://localhost:8888/save_chunk', formData)
       })
       await Promise.all(requestList)
-      console.log('notify');
+      console.log('notify')
       await this.notifyMergeChunks()
     },
   },
-  created() {
-  }
+  created() {},
 }
 </script>
-
 <style lang="less"></style>

@@ -27,7 +27,7 @@ app.get('/cache_chunk_list', (req, res) => {
   const hash = req.query.hash
   let ans
   if (fs.existsSync(hash)) {
-    ans = {dirs: fs.readdirSync(hash)}
+    ans = { dirs: fs.readdirSync(hash) }
   } else {
     ans = {}
   }
@@ -41,24 +41,23 @@ app.post('/merge_chunks', (req, res) => {
     if (err) return
     const chunkDir = fields.hash[0]
     const targetName = fields.filename[0]
-    const size = fields.size[0]
+    const limitSize = fields.limitSize[0]
     if (!chunkDir) return
 
     if (fs.existsSync(chunkDir)) {
       const chunkPaths = fs.readdirSync(chunkDir)
-      console.log(chunkPaths);
-      // chunkPaths.sort((a, b) => parseInt(a.split('_')[1]) - parseInt(b.split('_')[1]))
+      chunkPaths.sort((a, b) => parseInt(a.split('_')[1]) - parseInt(b.split('_')[1]))
 
       await Promise.all(
-        chunkPaths.map((chunkPath, idx) => {
-          return pipeStream(
+        chunkPaths.map((chunkPath, idx) =>
+          pipeStream(
             `${chunkDir}/${chunkPath}`,
             fs.createWriteStream(targetName, {
-              start: idx * size,
-              end: (idx + 1) * size,
+              start: idx * limitSize,
+              end: (idx + 1) * limitSize,
             })
           )
-        })
+        )
       )
     }
   })
@@ -70,7 +69,10 @@ app.post('/save_chunk', (req, res) => {
   form.uploadDir = 'tmp'
   form.parse(req, function (err, fields, files) {
     // console.log(err);
-    if (err) return
+    if (err) {
+      res.end('失败！！！')
+      return
+    }
     const idx = fields.idx[0]
     const hash = fields.hash[0]
     const chunk = files.chunk[0]
@@ -85,8 +87,9 @@ app.post('/save_chunk', (req, res) => {
     }
 
     fs.renameSync(chunk.path, path.resolve(dir, filename))
+
+    res.end()
   })
-  res.send(req.body)
 })
 
 app.listen(port, () => {
