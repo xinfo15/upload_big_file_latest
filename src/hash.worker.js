@@ -16,7 +16,7 @@ addEventListener('message', (e) => {
       idx ++
       spark.append(e.target.result)
       if (idx < chunkList.length) {
-        percent = Math.round(idx / chunkList.length * 1000) / 10
+        percent = Math.floor(idx / chunkList.length * 100)
         postMessage({
           percent
         })

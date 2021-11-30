@@ -1,12 +1,13 @@
 const express = require('express')
 const fs = require('fs')
 const Multiparty = require('multiparty')
+const { tmpdir } = require('os')
 const path = require('path')
-const { Z_FIXED } = require('zlib')
 
 const app = express()
 const port = 8888
 
+// cors
 app.use((req, res, next) => {
   res.setHeader('Access-Control-Allow-Origin', '*')
   res.setHeader('Access-control-Allow-Headers', '*')
@@ -45,7 +46,7 @@ app.post('/merge_chunks', (req, res) => {
     if (!chunkDir) return
 
     if (fs.existsSync(chunkDir)) {
-      const chunkPaths = fs.readdirSync(chunkDir)
+      let chunkPaths = fs.readdirSync(chunkDir)
       chunkPaths.sort((a, b) => parseInt(a.split('_')[1]) - parseInt(b.split('_')[1]))
 
       await Promise.all(
@@ -59,6 +60,12 @@ app.post('/merge_chunks', (req, res) => {
           )
         )
       )
+      
+      // 删除文件和目录
+      chunkPaths.forEach((chunkPath, idx) => {
+        fs.unlinkSync(path.resolve(__dirname, chunkDir, chunkPath))
+      })
+      fs.rmdirSync(chunkDir)
     }
   })
   res.end()
