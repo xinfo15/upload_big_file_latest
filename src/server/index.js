@@ -13,6 +13,27 @@ app.use((req, res, next) => {
   res.setHeader('Access-control-Allow-Headers', '*')
   next()
 })
+// 教程
+//https://blog.csdn.net/weixin_41545048/article/details/102978945
+app.post('/github/login', (req, res) => {
+
+})
+
+app.post('/github/callback', (req, res) => {
+
+})
+
+app.get('/cache_chunk_list', (req, res) => {
+  const hash = req.query.hash
+  let ans
+  if (fs.existsSync(hash)) {
+    ans = { dirs: fs.readdirSync(hash) }
+  } else {
+    ans = {}
+  }
+  
+  res.send(JSON.stringify(ans))
+})
 
 const pipeStream = (path, writeStream) =>
   new Promise((resolve) => {
@@ -23,18 +44,6 @@ const pipeStream = (path, writeStream) =>
     })
     readStream.pipe(writeStream)
   })
-
-app.get('/cache_chunk_list', (req, res) => {
-  const hash = req.query.hash
-  let ans
-  if (fs.existsSync(hash)) {
-    ans = { dirs: fs.readdirSync(hash) }
-  } else {
-    ans = {}
-  }
-
-  res.send(JSON.stringify(ans))
-})
 
 app.post('/merge_chunks', (req, res) => {
   const form = new Multiparty.Form()
