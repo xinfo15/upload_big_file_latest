@@ -1,12 +1,11 @@
+const { default: axios } = require('axios')
 const express = require('express')
 const fs = require('fs')
 const Multiparty = require('multiparty')
-const { tmpdir } = require('os')
 const path = require('path')
 
 const app = express()
 const port = 8888
-
 // cors
 app.use((req, res, next) => {
   res.setHeader('Access-Control-Allow-Origin', '*')
@@ -15,13 +14,34 @@ app.use((req, res, next) => {
 })
 // 教程
 //https://blog.csdn.net/weixin_41545048/article/details/102978945
-app.post('/github/login', (req, res) => {
+app.post('/github/login', (req, res) => {})
 
+app.get('/github/callback', async (req, res) => {
+  // console.log(req.query)
+  const code = req.query.code
+
+  const ans = await axios
+    .post('https://github.com/login/oauth/access_token', {
+      client_id: 'Iv1.40e24393ef848b3f',
+      client_secret: 'b1466de25753a18019cbae6bc8d726fa8d56a065',
+      code,
+    })
+    .catch((err) => console.log('error : ', err))
+
+  const querys = ans.data.split('&')
+  const queryObj = {}
+  querys.forEach((val, idx) => {
+    const tmp = val.split('=')
+    queryObj[tmp[0]] = tmp[1]
+  })
+
+  console.log(queryObj.access_token)
+  const accessToken = queryObj.access_token
+  
+  res.redirect(302, 'http://localhost:8080/#/?ac=' + accessToken);
 })
 
-app.post('/github/callback', (req, res) => {
-
-})
+app.post('/github/webhook', (req, res) => {})
 
 app.get('/cache_chunk_list', (req, res) => {
   const hash = req.query.hash
@@ -31,7 +51,7 @@ app.get('/cache_chunk_list', (req, res) => {
   } else {
     ans = {}
   }
-  
+
   res.send(JSON.stringify(ans))
 })
 
@@ -69,7 +89,7 @@ app.post('/merge_chunks', (req, res) => {
           )
         )
       )
-      
+
       // 删除文件和目录
       chunkPaths.forEach((chunkPath, idx) => {
         fs.unlinkSync(path.resolve(__dirname, chunkDir, chunkPath))
