@@ -1,0 +1,26 @@
+{
+  "name": "upload_large_file",
+  "version": "0.1.0",
+  "private": true,
+  "scripts": {
+    "serve": "vue-cli-service serve",
+    "build": "vue-cli-service build"
+  },
+  "dependencies": {
+    "core-js": "^3.6.5",
+    "element-ui": "^2.15.6",
+    "express": "^4.17.1",
+    "multiparty": "^4.2.2",
+    "spark-md5": "^3.0.2",
+    "vue": "^2.6.11",
+    "vue-worker": "^1.2.1"
+  },
+  "devDependencies": {
+    "@vue/cli-plugin-babel": "~4.5.0",
+    "@vue/cli-service": "~4.5.0",
+    "less": "^3.0.4",
+    "less-loader": "^5.0.0",
+    "vue-template-compiler": "^2.6.11",
+    "worker-loader": "^3.0.8"
+  }
+}
